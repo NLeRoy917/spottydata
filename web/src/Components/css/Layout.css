@@ -1,5 +1,4 @@
 .masthead {
-  height: 100vh;
   min-height: 500px;
   background-size: cover;
   -webkit-background-size: cover;
@@ -12,8 +11,7 @@
 
 .home-background {
   width: 100vw;
-  height: 100vh;
-  background-repeat: no-repeat;
+  background-repeat: repeat;
   background-size: cover;
   -webkit-background-size: cover;
   -moz-background-size: cover;

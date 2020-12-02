@@ -59,7 +59,7 @@ const Link = styled.a`
 `
 
 const querystring = require('querystring');
-const REDIRECT_BASE = process.env.REACT_APP_BASE_URL + '/analysis?'
+const REDIRECT_BASE = process.env.REACT_APP_BASE_URL + '/playlist-analysis?'
 
 const Playlist = ({name, img_link, token, authCode, id, desc, setName}) => {
 

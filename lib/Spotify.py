@@ -11,7 +11,10 @@ class Spotify():
         Args:
             access_token - the access token obtained as part of the authorization code flow on the front-end
         '''
-        self._spotify = spotipy.Spotify(auth=access_token)
+        if access_token:
+            self._spotify = spotipy.Spotify(auth=access_token)
+        else:
+            self._spotify = spotipy.Spotify()
 
     def get_playlists(self):
         '''
@@ -61,6 +64,13 @@ class Spotify():
             artists = self._spotify.artists(artist_ids)['artists']
             return artists
 
+    def song_features(self, song_id):
+        '''
+        Method to get the audio features for one song at a time. This is used for the song analysis section of the page.
+        '''
+        analysis = self._spotify.audio_features(song_id)
+        return analysis
+
     def get_playlist_items(self,playlist_id):
         '''
         Method to extract all the playlist items from a playlist regardless of number of items. The Spotify
@@ -68,15 +78,20 @@ class Spotify():
         be extracted at once - so a loop is used to repeatedly get the items until none are left.
         '''
         tracks_full = []
+        track_additions = []
         analysis = []
         artists = []
         
         tracks = self._get_playlist_tracks(playlist_id)
+        
         while True:
             
             # initialize empty track_ids and artist_ids lists
             track_ids = []
             artist_ids = []
+
+            for track in tracks['items']:
+                track_additions.append(track['added_at'])
             
             # extract track objects
             track_objects = [x['track'] for x in tracks['items']]
@@ -104,20 +119,59 @@ class Spotify():
             else:
                 last_update = tracks['items'][-1]['added_at']
                 break
-            
-            
         
-        return tracks_full, analysis, artists, last_update
+        return tracks_full, track_additions, analysis, artists, last_update
+    
+    def search(self, query, type):
+        '''
+        Method to search spotify for a certain query
+        '''
+        results = self._spotify.search(query, type=type, limit=5)
+        return results[type + 's']
         
 
-    def get_recommendations(self):
+    def get_recommendations(self, seeds, attributes):
         '''
         Gets song recommendations for a specified user. This is all done on Spotify's end. It takes in
         a few seed genres that are generated with Spotipy, then those are passed back into the recommednation
         method to produce a list of recommended songs
+
+        seeds - list of seeds to use for recommednations
+        attributes - 
         
         returns: recs - a lsit of recommended songs
         '''
-        seeds = self._spotify.recommendation_genre_seeds()
-        recs = self._spotify.recommendations(seed_genres=seeds)
+
+        # format parameters key-word arguments dictionary
+        parameters = {}
+        for attribute in attributes:
+            attribute_data = attributes[attribute]
+            if attribute_data['on']:
+                if 'goal' not in attribute_data:
+                    parameters['target_' + attribute] = attribute_data['value']
+                else:
+                    parameters[attribute_data['goal'] + '_' + attribute] = attribute_data['value']
+
+        
+        # format seeds into comma separated strings
+        seed_tracks = []
+        seed_artists = []
+        seed_genres = []
+        for seed in seeds:
+            if 'type' in seed:
+                if seed['type'] == 'track':
+                    seed_tracks.append(seed['id'])
+                else:
+                    seed_artists.append(seed['id'])
+            else:
+                seed_genres.append(seed['name'])
+
+
+        recs = self._spotify.recommendations(seed_tracks=seed_tracks, 
+                                      seed_artists=seed_artists, 
+                                      seed_genres=seed_genres,
+                                      limit=5,
+                                      **parameters
+                                      )
+
         return recs

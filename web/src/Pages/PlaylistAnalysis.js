@@ -9,6 +9,7 @@ import GenreChart from '../Components/GenreChart'
 import FeelChart from '../Components/FeelChart'
 import TempoChart from '../Components/TempoChart'
 import DurationChart from '../Components/DurationChart'
+import PlaylistTimeline from '../Components/PlaylistTimeline'
 import LyricCloud from '../Components/LyricCloud'
 import Loader from '../Components/Loader'
 import loading_gif from '../images/loading.gif'
@@ -152,7 +153,7 @@ function nthIndex(str, pat, n){
 }
 
 
-class Analysis extends React.Component {
+class PlaylistAnalysis extends React.Component {
 
 		  constructor(props) {
     		super(props);
@@ -223,7 +224,7 @@ class Analysis extends React.Component {
         'access_token': this.state.accessToken
          }
 
-        const response = await axios.get(URL_BASE + `${this.state.id}/analysis`, {headers})
+        const response = await axios.get(URL_BASE + `/analysis/playlist/${this.state.id}`, {headers})
 
         if(response.status === 200){
             //console.log(response) 
@@ -285,6 +286,8 @@ class Analysis extends React.Component {
             this.setState({tempo_data: data.tempo})
             this.setState({duration_data: data.duration})
             this.setState({last_update: data.last_update})
+            this.setState({timeline_labels: data.timeline_labels})
+            this.setState({timeline_data: data.timeline_data})
           }
             }
 
@@ -293,7 +296,7 @@ class Analysis extends React.Component {
           'access_token': this.state.accessToken
            }
 
-          const response = await axios.get(URL_BASE + `${this.state.id}/analysis/lyrics`, {headers})
+          const response = await axios.get(URL_BASE + `/analysis/lyrics/playlist/${this.state.id}`, {headers})
 
           if(response.status === 200){
               //console.log(response) 
@@ -427,7 +430,7 @@ class Analysis extends React.Component {
                 <ThemeProvider theme={button_theme}>
                   <Grid item>
                   <ButtonWrapper>
-                    <NewButton href={`${process.env.REACT_APP_REDIRECT_URI}`}>
+                    <NewButton href="/playlists">
                       Analyze Another
                     </NewButton>
                   </ButtonWrapper>
@@ -570,9 +573,18 @@ class Analysis extends React.Component {
           <Grid container spacing={2}
             direction="row"
             justify="center"
-            alignItems="center"
+            alignItems="stretch"
           >
-          <Grid item lg={8} md={8} s={6} xs={12}>
+          <Grid item lg={6} md={6} s={6} xs={12} style={{height: '100%'}}>
+            <ChartContainer title="Timeline (beta)">
+              {
+                this.state.timeline_data ?
+                <PlaylistTimeline labels={this.state.timeline_labels} data={this.state.timeline_data} palette={this.state.palette}/>
+                : ' '
+              }
+            </ChartContainer>
+          </Grid>
+          <Grid item lg={6} md={6} s={6} xs={12}>
               <ChartContainer title="Lyrics">
                   {this.state.lyrics_data ? 
                     <LyricCloud data={this.state.lyrics_data} palette={this.state.palette}/> : 
@@ -598,8 +610,8 @@ class Analysis extends React.Component {
 
 }
 
-Analysis.propTypes = {
+PlaylistAnalysis.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Analysis);
+export default withStyles(styles)(PlaylistAnalysis);

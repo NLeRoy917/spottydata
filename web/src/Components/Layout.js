@@ -15,6 +15,9 @@ const Wrapper = styled.div`
 `
 
 const Header = styled.header`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   min-height: 50px;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -29,7 +32,8 @@ const Header = styled.header`
 `
 
 const A = styled.a`
-
+    margin-left: 5px;
+    margin-right: 5px;
     color: blue;
 
 `
@@ -41,7 +45,7 @@ const Layout = ({ children }) => {
 
     useEffect(() => {
         checkCookies()
-    }, [])
+    }, [children])
 
     const checkCookies = () => {
         if (cookies.get('accessToken')) {
@@ -58,11 +62,17 @@ const Layout = ({ children }) => {
 
     return(
     <Wrapper className="masthead home-background">
-        {authed ? 
+     {authed ? 
         <Header>
-          Logged in as {user}. <A onClick={() => clearCookies()} href={`${process.env.REACT_APP_BASE_URL}`}>
+
+        <A href={"/"}>Home</A>
+        <div>
+          Logged in as {cookies.get('userName')}. 
+          <A onClick={() => clearCookies()} href={`${process.env.REACT_APP_BASE_URL}`}>
                       Logout?
                     </A>
+        </div>
+
         </Header> 
         : 
         <Header>

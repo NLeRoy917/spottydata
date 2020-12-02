@@ -64,7 +64,7 @@ class TempoChart extends React.Component{
 					<Line
 						data={this.state.data}
 						options={this.state.options}
-            dot={false}
+                        dot={false}
 				 />
   				</div>
   				);

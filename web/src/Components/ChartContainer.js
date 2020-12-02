@@ -14,7 +14,7 @@ const styles = theme => ({
   },
   paper: {
 	background: '#212529',
-	height: '100%'
+	height: '100%',
   },
   paper_title: {
     color: '#fff'

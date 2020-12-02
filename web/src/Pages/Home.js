@@ -9,9 +9,10 @@ import Layout from '../Components/Layout'
 
 import {
 Typography,
-Button,
 Grid
 } from '@material-ui/core';
+
+import SDButton from '../Components/SDButton';
 
 const AnalysisText = styled.p`
 	font-size:1.32rem;
@@ -64,41 +65,9 @@ const ButtonWrapper = styled.a`
     }
 `
 
-const NewButton = styled(Button)`
-  && {
-	@media (max-width: 768px) {
-	margin:15px;
-	width: 60vw;
-	height: 60px;
-  }
-	margin: 30px;
-	color: inherit;
-	width: 150px;
-	height: 50px;
-	border-radius: 0px;
-	border: solid 1px white;
-	box-shadow: 4px 4px;
-	&:hover {
-		color: white;
-		transform: translate(1px,1px);
-		opacity: 0.7;
-		text-decoration: none;
-		box-shadow: 2px 2px;
-    }
-  }
-`
-
 const TypistWrapper = styled.div`
 	min-height: 50px;
 
-`
-
-const CookieNotice = styled(Typography)`
-
-  color: white !important;
-  font-weight: 400 !important;
-  opacity: 0.6;
-  font-size: 1rem !important;
 `
 
 const HoverAlertWrapper = styled.div`
@@ -152,25 +121,21 @@ const payload = {
 const authorize_url = base_url + querystring.stringify(payload)
 
 
-
 const Home = () => {
 	const [letsGo, setLetsGo] = useState(false)
 	const [gitHub, setGitHub] = useState(false)
-	const [donate, setDonate] = useState(false)
+	const [find, setFind] = useState(false)
 
 const letsGoHoverChange = () => {
-
 	setLetsGo(!letsGo)
 }
 
 const gitHubHoverChange = () => {
-
 	setGitHub(!gitHub)
 }
 
-const donateHoverChange = () => {
-
-	setDonate(!donate)
+const findHoverChange = () => {
+	setFind(!find)
 }
 
 return(
@@ -191,7 +156,7 @@ return(
         	startDelay={1000}
         	cursor={{blink:true,hideWhenDone: true,hideWhenDoneDelay: 1000,}}
 			>
-			<AnalysisText className="lead">Analyze your playlist:</AnalysisText>
+			<AnalysisText className="lead">Analyze your music:</AnalysisText>
 				<Typist.Delay ms={500} />
 					<AnalysisText>&nbsp;Tempo.</AnalysisText>
 				<Typist.Delay ms={500} />
@@ -209,21 +174,21 @@ return(
 			</Typist>
 		  </TypistWrapper>
 	        <ButtonWrapper onMouseEnter={() => {letsGoHoverChange()}} onMouseLeave={() => letsGoHoverChange()} href={authorize_url}>
-              <NewButton variant="outlined">Lets Go</NewButton>
+              <SDButton variant="outlined">Lets Go</SDButton>
+            </ButtonWrapper>
+			<ButtonWrapper onMouseEnter={() => {findHoverChange()}} onMouseLeave={() => findHoverChange()} href="/find-music">
+              <SDButton variant="outlined">Find Music</SDButton>
             </ButtonWrapper>
 			<ButtonWrapper onMouseEnter={() => {gitHubHoverChange()}} onMouseLeave={() => gitHubHoverChange()} href="https://github.com/NLeRoy917/spottydata">
-              <NewButton variant="outlined">GitHub</NewButton>
-            </ButtonWrapper>
-	        <ButtonWrapper onMouseEnter={() => {donateHoverChange()}} onMouseLeave={() => donateHoverChange()} href="https://paypal.me/nathanleroy?locale.x=en_US">
-              <NewButton variant="outlined">Donate</NewButton>
+              <SDButton variant="outlined">GitHub</SDButton>
             </ButtonWrapper>
 			{isMobile ? '' : 
 			<HoverAlertWrapper style={{minHeight: '75px'}}>
 			<br></br>
 			<div>
-			{letsGo ? <HoverAlert>Analyze a playlist <span style={{fontSize: '1.3rem'}}> &nbsp;&nbsp;➡️</span></HoverAlert> : ''}
-			{gitHub ? <HoverAlert>View source on GitHub <span style={{fontSize: '1.3rem'}}> &nbsp;&nbsp;&nbsp;🚀</span></HoverAlert> : ''}
-			{donate ? <HoverAlert>$5 pays for one week of server time <span style={{fontSize: '1.5rem'}}>&nbsp;&nbsp;💻</span></HoverAlert> : ''}
+			  {letsGo ? <HoverAlert>Analyze music <span style={{fontSize: '1.3rem'}}> &nbsp;&nbsp;➡️</span></HoverAlert> : ''}
+			  {gitHub ? <HoverAlert>View source on GitHub <span style={{fontSize: '1.3rem'}}> &nbsp;&nbsp;&nbsp;🚀</span></HoverAlert> : ''}
+			  {find ? <HoverAlert>Find new music <span style={{fontSize: '1.5rem'}}>&nbsp;&nbsp;💻</span></HoverAlert> : ''}
 			</div>
 			</HoverAlertWrapper>
 			}

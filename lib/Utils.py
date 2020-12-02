@@ -81,7 +81,7 @@ class Utils():
           
         return density
 
-    def analyze_playlist(self,analysis_list,tracks,artist_list):
+    def analyze_playlist(self, analysis_list, tracks, artist_list):
         '''
         This is the method that conducts the analysis for all the tracks in a playlist. It requires the analysis list,
         the track list, and the artist list. It gathers data on each songs key, feel, genre, tempo, and duration.
@@ -246,3 +246,23 @@ class Utils():
         	mode = 'No Mode'
 
         return mode
+    
+    def month_int_to_string(self, month_int):
+        '''
+        convert month int to month string
+        '''
+        switcher = {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9: "September",
+            10: "October",
+            11: "November",
+            12: "December"
+        }
+        return switcher.get(month_int, "Invalid month")

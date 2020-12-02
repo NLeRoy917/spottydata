@@ -1,5 +1,4 @@
-import React from 'react';
-import {Redirect} from 'react-router-dom';
+import React, {useState, useEffect} from 'react';
 import Cookies from 'universal-cookie';
 import styled from 'styled-components'
 import {isMobile} from 'react-device-detect'
@@ -11,6 +10,7 @@ import blank_profile from '../images/blank_profile.png'
 import Playlist from '../Components/Playlist'
 import Loader from '../Components/Loader'
 import loading_gif from '../images/loading.gif'
+import SDButton from '../Components/SDButton'
 
 // Load Material UI
 // Load in the materials-ui components
@@ -111,199 +111,56 @@ title_theme.typography.h5 = {
   },
 };
 
-class Playlists extends React.Component{
+const ErrorView = ({ }) => {
+    return(
+        <div>
+			<br>
+			</br>
+			<br></br>
+			<Typography variant="h4">Token Error :( Please go back to the home page</Typography>
+				<Typography variant="body1">If error persists, try clearing your browser cache and removing cookies for the site.</Typography>
+			<ButtonWrapper >
+              <SDButton href="/" variant="outlined"><span> Take me back! </span></SDButton>
+            </ButtonWrapper>
+		</div>
+    )
+}
 
-		  constructor(props) {
-    		super(props);
+const Playlists = ({}) => {
 
-    		this.state = {
-      		authCode: querystring.parse(window.location.href.slice(window.location.href.indexOf('?')+1)).code,
-      		accessToken: null,
-      		client_id: '0ca7dd0007fd4ff2a34c3aab07379970',
-      		client_secret: process.env.REACT_APP_CLIENT_SECRET,
-      		redirect_uri: process.env.REACT_APP_REDIRECT_URI,
-      		user: null,
-      		user_id: null,
-      		playlists: null,
-			chunked_playlists: null,
-			cancelled: false,
-
-    		};
-		  }
+		const [playlists, setPlaylists] = useState([])
+		const [accessToken, setAccessToken] = useState(cookies.get('accessToken'))
+		const [user, setUser] = useState(cookies.get('user'))
+		const [error, setError] = useState(false)
 		
-		componentWillMount() {
-			if(querystring.parse(window.location.href.slice(window.location.href.indexOf('?')+1)).error === 'access_denied') {
-				this.setState({cancelled: true})
-			}
-		}
-		
-  		componentDidMount() {
-  			this.fetchAuthCode()
-  			this.setState({authCode: querystring.parse(window.location.href.slice(window.location.href.indexOf('?')+1)).code})
-  			//console.log(this.state.authCode)
-		  }
-		
-		clearCookies = () => {
-			cookies.remove('accessToken')
-			cookies.remove('refreshToken')
-			cookies.remove('userName')
-		}
+		useEffect(() => {
+			fetchPlaylists()
+		}, [])
 		  
-		refreshToken = async () => {
-			//console.log('Refreshing token')
-			//console.log(cookies.get('refreshToken'))
-			const headers = {
-				'Authorization': 'Basic ' + btoa(this.state.client_id + ':' + this.state.client_secret)
-			}
-
-			const body = {
-				grant_type: 'refresh_token',
-				refresh_token: cookies.get('refreshToken')
-			}
-			try {
-			const response = await axios.post('https://accounts.spotify.com/api/token', querystring.stringify(body), {headers: headers})
-			if(response.status === 200) {
-				//console.log('Access token refreshed')
-				const data = await response.data
-				//console.log(data)
-
-				if(data.refresh_token !== undefined){
-					this.setState({refreshToken: data.refresh_token})
-				}
-				this.setState({expiresIn: data.expires_in})
-				this.setState({accessToken: data.access_token})
-
-				if(data.refresh_token !== undefined){
-					cookies.set('refreshToken',data.refresh_token,{path: '/'})
-				} else {
-					cookies.remove('refreshToken')
-				}
-
-				cookies.set('expiresIn',data.expires_in,{path: '/', expires: new Date(Date.now()+ data.expires_in*1000)})
-				cookies.set('accessToken',data.access_token,{ path: '/', expires: new Date(Date.now()+ data.expires_in*1000)})
-
-				this.fetchName(this.state.accessToken)
-			}
-		} catch(err) {
-			this.setState({accessTokenError: true})
-			cookies.delete('accessToken')
-			cookies.delete('refreshToken')
-		}
-
-		}
-
-  		fetchAuthCode = () => {
-  			/*
-  			The auth code is only good ONCE. Once it is used to get an access token from spotify, it must be regenerated to get another access token.
-
-  			Thus, it should be found here from the querystring, then we call the fetchAccessToken() function and never look at auth code again until 
-  			application is reloaded.
-  			*/
-  			var authCode = querystring.parse(window.location.href.slice(window.location.href.indexOf('?')+1)).code
-  			this.setState({authCode: authCode},() => {this.fetchAccessToken()})
-  		}
-
-		fetchAccessToken = async () => {
-			/*
-			The access token and refresh token should be found, set, and stored as a cookie for later use - if the refresh token can be found as a cookie...
-			dont even try to go thru the process of getting another one - since the auth code is no longer valid - simply refresh access code and continue.
-			*/
-
-			if (cookies.get('accessToken')) {
-				//console.log(cookies.get('accessToken'))
-				this.setState({accessToken: cookies.get('accessToken')})
-				this.fetchName(cookies.get('accessToken'))
-
-			} else if(cookies.get('refreshToken')){
-				//console.log('refresh token found in cookies')
-				this.refreshToken()
-
-			} else {
-
-				//console.log('No access token or refresh token found in cookies')
-				const headers = {
-					'Content-Type': 'application/x-www-form-urlencoded',
-					'Authorization': 'Basic ' + btoa(this.state.client_id + ':' + this.state.client_secret)
-				}
-
-				const body = {
-					grant_type: 'authorization_code',
-					code: this.state.authCode,
-					redirect_uri: this.state.redirect_uri
-				}
-				try{
-				const response = await axios.post('https://accounts.spotify.com/api/token',querystring.stringify(body),{headers: headers})
-				
-				if(response.status === 200) {
-					//console.log(response)
-					const data = await response.data
-					this.setState({refreshToken: data.refresh_token})
-					this.setState({expiresIn: data.expires_in})
-					this.setState({accessToken: data.access_token})
-
-					cookies.set('refreshToken',data.refresh_token,{path: '/'})
-					cookies.set('expiresIn',data.expires_in,{path: '/', expires: new Date(Date.now()+ data.expires_in*1000)})
-					cookies.set('accessToken',data.access_token,{ path: '/', expires: new Date(Date.now()+ data.expires_in*1000)})
-					this.fetchName(this.state.accessToken)
-
-					return data.access_token
-				}
-			} catch(err){
-				this.setState({accessTokenError: true})
-				cookies.remove('accessToken')
-				cookies.remove('refreshToken')
-			}
-			}
-		}
-
-		fetchName = async (access_token) => {
-			//console.log(access_token)
-			const headers = {
+		const fetchPlaylists = async () => {
+			var hdrs = {
 				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + access_token
-			}
-
-			try{
-			const response = await axios.get('https://api.spotify.com/v1/me',{headers})
-			
-			if(response.status === 200) {
-				//console.log(response) 
-				
-		    	const data = await response.data
-				this.setState({user: data})
-				cookies.set('userName',data.display_name,{path: '/'})
-		    	this.fetchPlaylists()
-			}
-		} catch(response) {
-				/* This indicates a bad access token probably... need to refresh*/
-				this.refreshToken()
-		}
-
-		}
-
-		fetchPlaylists = async () => {
-			const headers = {
-				'Content-Type': 'application/json',
-				'access_token': this.state.accessToken
+				'access_token': accessToken
 			}
 			//console.log('token: ' + this.state.accessToken)
 
 			try {
-			const response = await axios.get(API_URL + this.state.user.id + '/playlists',{headers})
-			if(response.status === 200) {
-		    	//console.log(response);
-		    	const data = await response.data
-		    	//console.log(data)
-		    	this.setState({playlists: data})
-		    	this.setState({chunked_playlists: this.chunkPlaylists(data,3)})
+				let response = await axios.get(API_URL + user.id + '/playlists',{headers: hdrs})
+				if(response.status === 200) {
+		    		//console.log(response);
+		    		const data = await response.data
+		    		//console.log(data)
+		    		setPlaylists(chunkPlaylists(data,3))
 			}
+
 			} catch(err) {
-			cookies.remove('acccessToken')
-			cookies.remove('refreshToken')
+				setError(true)
+				cookies.remove('acccessToken')
+				cookies.remove('refreshToken')
 			}
 		}
 
-		chunkPlaylists(playlists,cols) {
+		const chunkPlaylists = (playlists,cols) => {
 
 			let chunked_playlists = [];
 			let chunk = [];
@@ -330,11 +187,8 @@ class Playlists extends React.Component{
 			return chunked_playlists
 		}
 
-		render() {
-
-
-		if(this.state.playlists){
 		return (
+			error ? <ErrorView /> : (playlists.length > 0) ? 
 		<>
         <br></br>
 		<br></br>
@@ -348,11 +202,11 @@ class Playlists extends React.Component{
 				spacing={10}
           >
             <Grid item lg={3} xs={12} style={{height:'100%', padding: isMobile ? 5 : ''}}>
-                  <a href={this.state.user.external_urls.spotify}>
+                  <a href={user.external_urls.spotify}>
 				  <img
 				  	  style={{width: '75%', maxWidth: '300px'}}
-                      src={this.state.user.images[0] ? this.state.user.images[0].url : blank_profile}
-                      alt={this.state.user.display_name}
+                      src={user.images[0] ? user.images[0].url : blank_profile}
+                      alt={user.display_name}
                   />
                   </a>
             </Grid>
@@ -360,11 +214,10 @@ class Playlists extends React.Component{
               <ThemeProvider theme={title_theme}>
 			  <div style={{textAlign: 'left !important'}}>
                 <Typography variant={isMobile ? 'h5' : 'h3'} align={'left'} style={{fontWeight: 400, textAlign: isMobile ? 'center !important' : 'left !important'}}>
-					Welcome {this.state.user.display_name}!
+					Welcome {user.display_name}!
 				</Typography>
                 <Typography variant={isMobile ? 'body1' : 'h5'} align={'left'} style={{fontWeight: 100, textAlign: isMobile ? 'center !important' : 'left !important'}}>
 					Please select a playlist to continue.
-					{this.state.name}
 				</Typography>
 			  </div>
 			  </ThemeProvider>
@@ -372,16 +225,15 @@ class Playlists extends React.Component{
 			<Grid container justify={isMobile ? "center" : "flex-start"} item lg={3} xs={12} style={{height: '100%',width:'100%', padding: isMobile ? 5 : ''}}>
 			<div  style={{textAlign: isMobile ? 'center':'left', width: '100%'}}>
 			  <ButtonWrapper >
-				  <NewButton style={{marginLeft: '0'}} href={process.env.REACT_APP_BASE_URL}>
+				  <NewButton style={{marginLeft: '0'}} href="/analysis-select">
 					  Back
 				  </NewButton>
 			  </ButtonWrapper>
 			  </div>
             </Grid>
           </Grid>
-
           <div className="justify-content-center">
-				{this.state.chunked_playlists ? this.state.chunked_playlists.map((chunk,key) => {
+			{playlists.map((chunk,key) => {
 				return(
 					<div className="justify-content-center row card-row" key={key}>
 						{chunk.map((playlist,key) => {
@@ -393,44 +245,22 @@ class Playlists extends React.Component{
 										   name={playlist.name} 
 										   img_link={playlist.images[0] ? playlist.images[0].url : {blank_image}} 
 										   id={playlist.id} 
-										   token={this.state.accessToken} 
+										   token={accessToken} 
 										   desc={playlist.description} 
-										   authCode={this.state.authCode}
 										/>
 									</FadeIn>
 								</div>
 							);
 						})}
 					</div>)
-			}) : ' '}
+			})}
 		</div>
 		</Container>
         <br></br>
 		</>
-				);}
-		else if(this.state.accessTokenError) {
-			return(
-			<div>
-			<br>
-			</br>
-			<br></br>
-			<Typography variant="h4">Token Error :( Please go back to the home page</Typography>
-				<Typography variant="body1">If error persists, try clearing your browser cache and removing cookies for the site.</Typography>
-			<ButtonWrapper href={process.env.REACT_APP_BASE_URL}>
-              <NewButton variant="outlined"><span> Take me back! </span></NewButton>
-            </ButtonWrapper>
-			</div>)
-		}else if(this.state.cancelled) {
-			return(<Redirect to="/" />)
-		}
-		else{
-			return(<Loader image={loading_gif} message="Fetching Playlists..."/>);
-		}
-		}
+		:
+		<Loader />
+		)
 }
-
-Playlists.propTypes = {
-  classes: PropTypes.object.isRequired,
-};
 
 export default withStyles(styles)(Playlists);

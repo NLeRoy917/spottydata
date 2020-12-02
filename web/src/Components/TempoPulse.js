@@ -64,8 +64,7 @@ const Pulse = styled.div`
 const TempoPulse = ({ bpm, color }) => {
 
     return(
-        <Pulse color={color} bpm={bpm}>
-        </Pulse>
+        <Pulse color={color} bpm={bpm}></Pulse>
     )
 
 }

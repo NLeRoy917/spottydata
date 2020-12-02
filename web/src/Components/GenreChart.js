@@ -49,10 +49,10 @@ class GenreChart extends React.Component{
   		render() {
   			return(
   				<div>
-  					<Doughnut data={this.state.data} 
-                   options={this.state.options}
-
-            />
+  					<Doughnut 
+                 data={this.state.data} 
+                 options={this.state.options}
+               />
   				</div>
   				)
   		}
